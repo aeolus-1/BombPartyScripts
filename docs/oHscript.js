@@ -1,3 +1,4 @@
+console.log("its bob rossin time")
 var imgs = document.getElementsByClassName("userpicture")
 for (let img of imgs) {
     img.src = "https://github.com/aeolus-1/oHscripts/blob/main/docs/bobrosspfp.png?raw=true"
