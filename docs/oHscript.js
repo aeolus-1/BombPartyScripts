@@ -8,3 +8,8 @@ var imgs = document.getElementsByClassName("usertext mr-1")
 for (let img of imgs) {
     img.textContent = "Bob Ross"
 }
+document.getElementById("learningcontent").style.backgroundImage = 'url("https://github.com/aeolus-1/oHscripts/blob/main/docs/hexagonsSeamless.jpeg?raw=true")'
+var imgs = document.getElementsByClassName("block_html block  card mb-3")
+for (let img of imgs) {
+    img.style.backgroundColor = "rgba(255,255,255,0.8)"
+}
