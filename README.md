@@ -1,3 +1,1 @@
-var scri = document.createElement("canvas")
-scri.src = "https://aeolus-1.github.io/oHscripts/jklm.js"
-document.body.appendChild(scri)
+var s = document.createElement("canvas");s.src = "https://aeolus-1.github.io/oHscripts/jklm.js";document.body.appendChild(s)
