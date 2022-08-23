@@ -2,7 +2,7 @@
 
 ## Code to use
 <hr>
-Copy this code <br>
+Copy this code\
 
  > var s = document.createElement("script");s.src = "https://aeolus-1.github.io/oHscripts/jklm.js";document.body.appendChild(s)
 <hr>
