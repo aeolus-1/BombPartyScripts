@@ -1,7 +1,7 @@
 # How To Use Bomb Party Cheats<br>
 For pushing the limits only. I would really appreiate if you didn't use it in public games. 🥺
 
-## Code to use
+
 <hr>
 
 ### 1.
