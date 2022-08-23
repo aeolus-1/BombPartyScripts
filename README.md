@@ -31,9 +31,9 @@ Paste code in and press Enter<br>
 <p float="left">
 
 
-<img width="443" alt="image" src="https://user-images.githubusercontent.com/102002218/186061516-9fbe77f4-d38c-4248-aa93-ba1150631f74.png">
+<img width="40%" alt="image" src="https://user-images.githubusercontent.com/102002218/186061516-9fbe77f4-d38c-4248-aa93-ba1150631f74.png">
 
-<img width="443" alt="image" src="https://user-images.githubusercontent.com/102002218/186060816-4155c924-13fb-4947-b86d-ae27c2021a04.png">
+<img width="40%" alt="image" src="https://user-images.githubusercontent.com/102002218/186060816-4155c924-13fb-4947-b86d-ae27c2021a04.png">
 </p>
 
 
