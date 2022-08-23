@@ -1,4 +1,5 @@
-# How To Use<br>
+# How To Use Bomb Party Cheats<br>
+For pushing the limits only. I would really appreiate if you didn't use it in public games. 🥺
 
 ## Code to use
 <hr>
@@ -18,7 +19,7 @@ Alternativly right click and select "Inspect". Then navigate to console using th
 ### 3.
 
 Select the drop down that may contain "top ▾"<br>
-Select "falcon.jklm.fun"
+Select "falcon.jklm.fun" (sometime it might say "phoenix.jklm.fun")
 <p float="left">
   <img width="40%" src="https://user-images.githubusercontent.com/102002218/186060406-050cbc13-89d5-4a20-a7e2-747455f36c6b.png"></img> <img width="40%" src="https://user-images.githubusercontent.com/102002218/186060370-93e7319f-1de2-4c3c-8b0d-56c6d465e805.png"></img>
 </p>
