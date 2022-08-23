@@ -17,7 +17,8 @@ Alternativly right click and select "Inspect". Then navigate to console using th
 
 ### 3.
 
-Select the drop down that may contain "top▾"
+Select the drop down that may contain "top ▾"
+Select "falcon.jklm.fun"
 <p float="left">
   <img width="443" alt="image" style="float:left;" src="https://user-images.githubusercontent.com/102002218/186057619-9c2ee54c-eec0-494e-9fcf-cf0f2037baec.png"><img width="443" alt="image" style="float:left;" src="https://user-images.githubusercontent.com/102002218/186057728-fa3d18c9-c44a-4fd1-b5c9-603449262820.png">
 </p>
