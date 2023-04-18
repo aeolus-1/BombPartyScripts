@@ -33,22 +33,29 @@ function typeLetter(letter, length) {
             setTimeout(() => {
                 typeText(letter)
                 resolve(true)
-            }, length);
+            }, ((Math.random()>0.9)?3.5:1)*length);
         })
 }
-var currentWord = ""
+var currentWord = "",
+    usedWords = []
 function typeText(string) {
     currentWord += string
     socket.emit("setWord", currentWord, false);
 
 }
 function findWords(syllable) {
-    return words.filter((a)=>{return a.includes(syllable)})
+    return words.filter((a)=>{return a.includes(syllable)&&!usedWords.includes(a)})
 }
+
+socket.on("correctWord", (data) => {
+    var word = milestone.playerStatesByPeerId[data.playerPeerId].word
+    usedWords.push(word)
+ 
+ });
 
 socket.on("nextTurn", (data) => {
     if (data==selfPeerId) {
-        var timeout = 500+(bias(Math.random(),0.6)*2000),   
+        var timeout = 500+(bias(Math.random(),0.5)*3000),   
             words = findWords(milestone.syllable)
         setTimeout(() => {
             typeWord(words[0], 0.6)
@@ -59,6 +66,14 @@ socket.on("nextTurn", (data) => {
     
 
 });
+
+socket.on("setStartTime", (data)=>{usedWords=[]});
+
+setInterval(()=>{
+    document.getElementsByClassName("styled joinRound")[0].click()
+}, 5980)
+
+
 
 
 
