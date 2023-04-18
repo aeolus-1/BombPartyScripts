@@ -41,7 +41,8 @@ function typeLetter(letter, length) {
 }
 var currentWord = "",
     usedWords = [],
-    gameSpeed = 1
+    gameSpeed = 1,
+    startSpeed = 1
 function typeText(string) {
     currentWord += string
     socket.emit("setWord", currentWord, false);
@@ -75,7 +76,7 @@ socket.on("correctWord", (data) => {
  });
 
  function runGame() {
-    var timeout = 500+(bias(Math.random(),0.5)*1500),   
+    var timeout = (250+(bias(Math.random(),0.5)*1250))*startSpeed,   
     words = findWords(milestone.syllable)
 setTimeout(() => {
     typeWord(words[0], 0.5)
