@@ -109,9 +109,11 @@ function findWords(syllable) {
         !usedWords.includes(a)
     })
 
-    return filteredWords.sort((a,b)=>{
+    console.log()
+
+    return {words:filteredWords.sort((a,b)=>{
         return -Math.sign(scoreWord(a)-scoreWord(b))
-    })
+    }),diff:(10000/filteredWords.length)}
 }
 function findRandomWord() {
     return words[Math.floor(Math.random()*words.length-1)]
@@ -135,11 +137,15 @@ socket.on("correctWord", (data) => {
 
  function runGame() {
     var timeout = (250+(bias(Math.random(),0.5)*1250))*startSpeed,   
-    words = findWords(milestone.syllable)
+    wordsR = findWords(milestone.syllable),
+    words = wordsR.words
+    console.log(wordsR.diff)
 setTimeout(() => {
-    typeWord(words[0], 0.5)
+    typeWord(words[0], 0.5
+        
+        )
 
-}, timeout*gameSpeed);
+}, timeout*gameSpeed*Math.max(Math.min(5.5, wordsR.diff), 0.2));
  }
 socket.on("nextTurn", (data) => {
     if (data==selfPeerId) {
