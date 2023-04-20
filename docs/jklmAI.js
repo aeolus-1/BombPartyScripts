@@ -109,7 +109,6 @@ function findWords(syllable) {
         !usedWords.includes(a)
     })
 
-    console.log()
 
     return {words:filteredWords.sort((a,b)=>{
         return -Math.sign(scoreWord(a)-scoreWord(b))
@@ -118,15 +117,19 @@ function findWords(syllable) {
 function findRandomWord() {
     return words[Math.floor(Math.random()*words.length-1)]
 }
+
 function scoreWord(word) {
     var letterScores = milestone.playerStatesByPeerId[selfPeerId].bonusLetters,
         requiredLetters = Object.keys(letterScores).filter((a)=>{return letterScores[a]>0})
-    let score = 0
-    for (let i = 0; i < requiredLetters.length; i++) {
-        const letter = requiredLetters[i];
-        if (word.includes(letter)) score++
+    let score = -word.length+(Math.random()*0.5)
+    if (milestone.playerStatesByPeerId[selfPeerId]) if (milestone.playerStatesByPeerId[selfPeerId].lives<=2) {
+        for (let i = 0; i < requiredLetters.length; i++) {
+            const letter = requiredLetters[i];
+            if (word.includes(letter)) score+=2
+            
+        }
     }
-    return score
+    return score+(Math.random()*3)+(-1.5)
     }
 
 socket.on("correctWord", (data) => {
@@ -136,28 +139,41 @@ socket.on("correctWord", (data) => {
  });
 
  function runGame() {
-    var timeout = (250+(bias(Math.random(),0.5)*1250))*startSpeed,   
+     console.log("yay")
+    var timeout = (250+(bias(Math.random(),0.5)*1000))*startSpeed,   
     wordsR = findWords(milestone.syllable),
     words = wordsR.words
-    console.log(wordsR.diff)
+    console.log(timeout*gameSpeed*Math.max(Math.min(1, wordsR.diff), 0.2))
 setTimeout(() => {
     typeWord(words[0], 0.5
         
         )
 
-}, timeout*gameSpeed*Math.max(Math.min(5.5, wordsR.diff), 0.2));
+}, timeout*gameSpeed*Math.max(Math.min(1, wordsR.diff), 0.2));
  }
 socket.on("nextTurn", (data) => {
     if (data==selfPeerId) {
-        runGame()
+        if (!failStart) {
+            //runGame()
+        } else {
+            //socket.emit("💥", currentWord, true);
+        }
 
     }
     
 
 });
 
+
+
+var failStart = false
+function fail() {
+    failStart = true
+}
+
 socket.on("setStartTime", (data)=>{
     usedWords=[]
+    failStart = false
     setTimeout(() => {
         //console.log("catched faulty start", milestone.currentPlayerPeerId, selfPeerId)
     //runGame()
@@ -167,10 +183,24 @@ socket.on("setStartTime", (data)=>{
 
 setInterval(()=>{
     var butts = document.getElementsByClassName("styled joinRound")
-    if (butts.length>0) butts[0].click()
-}, 5980)
+    if (butts.length>0) setTimeout(() => {
+        let butts = document.getElementsByClassName("styled joinRound")
+        if (butts.length>0) butts[0].click()
+    }, 800);
+}, 50)
 
+var prePerson = undefined
+setInterval(() => {
+    var currentPeer = milestone.currentPlayerPeerId
+    if (currentPeer!=prePerson) {
+        console.log("change to", currentPeer)
+        prePerson = currentPeer
 
+        if (currentPeer==selfPeerId) {
+            runGame()
+        }
+    }
+}, 1);
 
 
 
