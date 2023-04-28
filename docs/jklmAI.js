@@ -65,7 +65,7 @@ async function typeSmoothly(word, length) {
         let wordPer = i/word.length
 
         await typeLetter(word[i], 
-                         (0.3+(bias(Math.random(), 0.5)*0.9))*letterLength
+                         (0.3+(bias(Math.random(), 0.7)*0.9))*letterLength
                          *falloff(wordPer)
                         
                         )
@@ -105,9 +105,9 @@ async function typeWord(word, typingSpeec) {
     let wordLength = 0.25+(bias(Math.random(),0.6)*0.75)
     await typeSmoothly(word, word.length*500*wordLength*(1/typingSpeec))
     setTimeout(() => {
-        socket.emit("setWord", currentWord, true);
+        socket.emit("setWord", word, true);
         currentWord = ""
-    }, Math.floor(Math.random()*300)*gameSpeed);
+    }, Math.floor(Math.random()*700)*gameSpeed);
     
 
     
@@ -172,22 +172,24 @@ function findRandomWord() {
 function scoreWord(word, smaller=false) {
     var letterScores = (milestone.playerStatesByPeerId[selfPeerId]||{bonusLetters:[]}).bonusLetters,
         requiredLetters = Object.keys(letterScores).filter((a)=>{return letterScores[a]>0})
-    let score = word.length+(smaller)?(0):(Math.random()*1)
-    if (playerWords.includes(word)&&!smaller) score += 10
-    if (milestone.playerStatesByPeerId[selfPeerId]&&!smaller) if (milestone.playerStatesByPeerId[selfPeerId].lives<=2) {
+    let score = (-Math.floor(Math.abs(word.length-averageLength.num)))
+    //if (playerWords.includes(word)&&!smaller) score += 10
+    if (milestone.playerStatesByPeerId[selfPeerId]&&!smaller) if (milestone.playerStatesByPeerId[selfPeerId].lives<2) {
         for (let i = 0; i < requiredLetters.length; i++) {
             const letter = requiredLetters[i];
-            if (word.includes(letter)) score+=2
+            if (word.includes(letter)) score+=20
             
         }
     }
-    return score+(smaller)?(0):((Math.random()*3)+(-1.5))
+    return score+(Math.random()*0.1)
     }
 
 socket.on("correctWord", (data) => {
     var word = milestone.playerStatesByPeerId[data.playerPeerId].word
     usedWords.push(word)
     addWord(word)
+
+    console.log("word length at: ", addAverage(word.length))
  
  });
 
@@ -257,6 +259,12 @@ setInterval(() => {
         }
     }
 }, 1);
+var averageLength = {num:0,len:0}
+function addAverage(length) {
+    averageLength.num=((averageLength.num*averageLength.len)+(length))/(averageLength.len+1)
+    averageLength.len++
+    return averageLength.num
+}
 socket.on("setPlayerWord",(d)=>{playerWord(d)} )
 function playerWord(data) {
     var word = milestone.playerStatesByPeerId[data].word
