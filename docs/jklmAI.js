@@ -1,6 +1,53 @@
 var s = document.createElement("script");s.src = "https://aeolus-1.github.io/BombPartyScripts/jklmWords.js";document.body.appendChild(s)
+var s = document.createElement("script");s.src = "https://aeolus-1.github.io/BombPartyScripts/profaneWords.js";document.body.appendChild(s)
+var playerWords = []
+function getStore() {
+    var st = localStorage.getItem("playerWords")
+    if (st==null) {
+        playerWords = []
+    } else {
+        playerWords = JSON.parse(st)
+    }
+}
+getStore()
+function intergrateStore() {
+    localStorage.setItem("playerWords", JSON.stringify(playerWords))
+}
+function addWord(word) {
+    if (!playerWords.includes(word) && !words.includes(word)) {
+        playerWords.push(word)
+        console.log(word)
+        window.top.postMessage(word+` ${playerWords.length}`, '*')
+    }
+    intergrateStore()
+}
 
 
+function addWord(word) {
+    if (!playerWords.includes(word) && !words.includes(word)) {
+        playerWords.push(word)
+        console.log(word)
+    }
+    intergrateStore()
+}
+
+function shuffle(array) {
+    let currentIndex = array.length,  randomIndex;
+  
+    // While there remain elements to shuffle.
+    while (currentIndex != 0) {
+  
+      // Pick a remaining element.
+      randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+  
+      // And swap it with the current element.
+      [array[currentIndex], array[randomIndex]] = [
+        array[randomIndex], array[currentIndex]];
+    }
+  
+    return array;
+  }
 
 function bias(t, n) {
 	let e = Math.pow(1 - n, 3);
@@ -18,7 +65,7 @@ async function typeSmoothly(word, length) {
         let wordPer = i/word.length
 
         await typeLetter(word[i], 
-                         (0.3+(bias(Math.random(), 0.5)*0.7))*letterLength
+                         (0.3+(bias(Math.random(), 0.5)*0.9))*letterLength
                          *falloff(wordPer)
                         
                         )
@@ -79,7 +126,7 @@ function deleteLetter(length) {
             setTimeout(() => {
                 deleteText()
                 resolve(true)
-            }, 40*gameSpeed);
+            }, 20*gameSpeed);
         })
 }
 function wait(length) {
@@ -103,58 +150,68 @@ function deleteText() {
     socket.emit("setWord", currentWord, false);
 
 }
-function findWords(syllable) {
-    var filteredWords = words.filter((a)=>{
+function findWords(syllable, smaller=false) {
+    var cWords = [...words,...playerWords]
+    var filteredWords = cWords.filter((a)=>{
         return a.includes(syllable) &&
         !usedWords.includes(a)
     })
 
 
     return {words:filteredWords.sort((a,b)=>{
-        return -Math.sign(scoreWord(a)-scoreWord(b))
+        return -Math.sign(scoreWord(a,smaller)-scoreWord(b,smaller))
     }),diff:(10000/filteredWords.length)}
+}
+function findRandomWord() {
+    return shuffle(words)[0]
 }
 function findRandomWord() {
     return words[Math.floor(Math.random()*words.length-1)]
 }
 
-function scoreWord(word) {
-    var letterScores = milestone.playerStatesByPeerId[selfPeerId].bonusLetters,
+function scoreWord(word, smaller=false) {
+    var letterScores = (milestone.playerStatesByPeerId[selfPeerId]||{bonusLetters:[]}).bonusLetters,
         requiredLetters = Object.keys(letterScores).filter((a)=>{return letterScores[a]>0})
-    let score = -word.length+(Math.random()*0.5)
-    if (milestone.playerStatesByPeerId[selfPeerId]) if (milestone.playerStatesByPeerId[selfPeerId].lives<=2) {
+    let score = word.length+(smaller)?(0):(Math.random()*1)
+    if (playerWords.includes(word)&&!smaller) score += 10
+    if (milestone.playerStatesByPeerId[selfPeerId]&&!smaller) if (milestone.playerStatesByPeerId[selfPeerId].lives<=2) {
         for (let i = 0; i < requiredLetters.length; i++) {
             const letter = requiredLetters[i];
             if (word.includes(letter)) score+=2
             
         }
     }
-    return score+(Math.random()*3)+(-1.5)
+    return score+(smaller)?(0):((Math.random()*3)+(-1.5))
     }
 
 socket.on("correctWord", (data) => {
     var word = milestone.playerStatesByPeerId[data.playerPeerId].word
     usedWords.push(word)
+    addWord(word)
  
  });
 
- function runGame() {
-     console.log("yay")
+ async function runGame() {
     var timeout = (250+(bias(Math.random(),0.5)*1000))*startSpeed,   
     wordsR = findWords(milestone.syllable),
     words = wordsR.words
-    console.log(timeout*gameSpeed*Math.max(Math.min(1, wordsR.diff), 0.2))
-setTimeout(() => {
-    typeWord(words[0], 0.5
-        
-        )
+    
+    while(Math.random()>0.95) {
+        var word = findRandomWord()
+        await wait((350*gameSpeed)+(Math.random()*200))
+        await missType(word, 200, 400)
+    }
+    await wait(timeout*gameSpeed*Math.max(Math.min(1, wordsR.diff), 0.2))
+    typeWord(words[0], 0.5)
+    
 
-}, timeout*gameSpeed*Math.max(Math.min(1, wordsR.diff), 0.2));
+
+
  }
 socket.on("nextTurn", (data) => {
     if (data==selfPeerId) {
         if (!failStart) {
-            //runGame()
+            //if (on) runGame()
         } else {
             //socket.emit("💥", currentWord, true);
         }
@@ -193,14 +250,62 @@ var prePerson = undefined
 setInterval(() => {
     var currentPeer = milestone.currentPlayerPeerId
     if (currentPeer!=prePerson) {
-        console.log("change to", currentPeer)
         prePerson = currentPeer
 
         if (currentPeer==selfPeerId) {
-            runGame()
+            if (on) runGame()
         }
     }
 }, 1);
+socket.on("setPlayerWord",(d)=>{playerWord(d)} )
+function playerWord(data) {
+    var word = milestone.playerStatesByPeerId[data].word
+    if (word=="help") {
+        
+        window.top.postMessage(`Try ${findWords(milestone.syllable, true).words.sort((a,b)=>{return Math.sign(a.length-b.length)})[0]}`, '*')
+    }
+    if (word=="idk") {
+        
+        window.top.postMessage(`Try ${findWords(milestone.syllable, true).words.sort((a,b)=>{return Math.sign(Math.abs(a.length-6)-Math.abs(b.length-6))})[0]}`, '*')
+    }
+    
+}
+var on = true
+document.addEventListener("keydown",(e)=>{if (e.keyCode==192){on = !on; if(on){runGame()};         window.top.postMessage(`Bot is activated`, '*')
+;console.log("Bot is ",on)}})
+function failWord(data) {
+    var word = milestone.playerStatesByPeerId[data].word
+    if (word=="help") {
+        
+        window.top.postMessage(`Try ${findWords(milestone.syllable, true).words.sort((a,b)=>{return Math.sign(a.length-b.length)})[0]}`, '*')
+    }
+    if (word=="idk") {
+        
+        window.top.postMessage(`Try ${findWords(milestone.syllable, true).words.sort((a,b)=>{return Math.sign(Math.abs(a.length-6)-Math.abs(b.length-6))})[0]}`, '*')
+    }
+    
 
+}
+socket.on("failWord", (data)=>{failWord(data)});
+/*
+
+
+var s = document.createElement("script");s.src = "https://aeolus-1.github.io/BombPartyScripts/profaneWords.js";document.body.appendChild(s)
+socket.on("failWord", (data) => {
+    
+    var name = playersByPeerId[data].profile.nickname,
+        word = profaneWords[Math.floor(Math.random()*profaneWords.length)]
+    if (Math.random()>0.9) window.top.postMessage(`${name} you're a little ${word}`, '*')
+        
+    
+
+});
+
+window.onmessage = function(e) {
+    socket.emit("chat", e.data)
+};
+
+
+*/
 
 
