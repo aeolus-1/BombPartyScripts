@@ -111,6 +111,8 @@ async function typeWord(word, typingSpeec) {
         socket.emit("setWord", word, true);
         currentWord = ""
     }, Math.floor(Math.random()*700)*gameSpeed);
+
+    return true
     
 
     
@@ -152,6 +154,11 @@ function deleteText() {
     currentWord = currentWord.slice(0,-1)
     socket.emit("setWord", currentWord, false);
 
+}
+function findAlreadyCompletedWords(syllable) {
+    var avalibeWords = usedWords.filter((a)=>{return a.includes(syllable)})
+    avalibeWords.sort((a,b)=>{return Math.sign(a.length-b.length)})
+    return avalibeWords.length>0?avalibeWords[0]:false
 }
 function findWords(syllable, smaller=false) {
     var cWords = [...words,...playerWords]
@@ -207,6 +214,11 @@ socket.on("correctWord", (data) => {
         var word = findRandomWord()
         await wait((350*gameSpeed)+(Math.random()*200))
         await missType(word, 200, 400)
+    }
+    var randomWord = findAlreadyCompletedWords(milestone.syllable),
+        failChance = 1-((1-0.95)*Math.min(usedWords.length/400, 2))
+    if (Math.random()>failChance&&randomWord) {
+        await typeWord(randomWord, 0.5)
     }
     await wait(timeout*gameSpeed*Math.max(Math.min(1, wordsR.diff), 0.2))
     typeWord(words[0], 0.5)
