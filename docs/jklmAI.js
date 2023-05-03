@@ -1,5 +1,8 @@
 var s = document.createElement("script");s.src = "https://aeolus-1.github.io/BombPartyScripts/jklmWords.js";document.body.appendChild(s)
 var s = document.createElement("script");s.src = "https://aeolus-1.github.io/BombPartyScripts/profaneWords.js";document.body.appendChild(s)
+var s = document.createElement("script");s.src = "https://aeolus-1.github.io/BombPartyScripts/compounds.js";document.body.appendChild(s)
+//https://aeolus-1.github.io/notBeanForce/names.js
+
 var playerWords = []
 function getStore() {
     var st = localStorage.getItem("playerWords")
@@ -174,6 +177,8 @@ function scoreWord(word, smaller=false) {
         requiredLetters = Object.keys(letterScores).filter((a)=>{return letterScores[a]>0})
     let score = (-Math.floor(Math.abs(word.length-averageLength.num)))
     //if (playerWords.includes(word)&&!smaller) score += 10
+    if (compounds.includes(word)) score += 1000000
+
     if (milestone.playerStatesByPeerId[selfPeerId]&&!smaller) if (milestone.playerStatesByPeerId[selfPeerId].lives<2) {
         for (let i = 0; i < requiredLetters.length; i++) {
             const letter = requiredLetters[i];

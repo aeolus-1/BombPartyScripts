@@ -1022,3 +1022,4 @@ var compounds = [
 "preview",
 "settings"
 ]
+console.log("loaded Compound")
