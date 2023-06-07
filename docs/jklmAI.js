@@ -51,7 +51,6 @@ function shuffle(array) {
   
     return array;
   }
-
 function bias(t, n) {
 	let e = Math.pow(1 - n, 3);
 	return (t * e) / (t * e - t + 1);
@@ -110,7 +109,7 @@ async function typeWord(word, typingSpeec) {
     setTimeout(() => {
         socket.emit("setWord", word, true);
         currentWord = ""
-    }, Math.floor(Math.random()*700)*gameSpeed);
+    }, Math.floor(Math.random()*700)*gameSpeed*survialSpeed);
 
     return true
     
@@ -123,7 +122,7 @@ function typeLetter(letter, length) {
             setTimeout(() => {
                 typeText(letter)
                 resolve(true)
-            }, (((Math.random()>0.9)?3.5:1)*length)*gameSpeed);
+            }, (((Math.random()>0.9)?3.5:1)*length)*gameSpeed*survialSpeed);
         })
 }
 function deleteLetter(length) {
@@ -131,20 +130,36 @@ function deleteLetter(length) {
             setTimeout(() => {
                 deleteText()
                 resolve(true)
-            }, 20*gameSpeed);
+            }, 20*gameSpeed*survialSpeed);
         })
 }
 function wait(length) {
     return new Promise(resolve => {
             setTimeout(() => {
                 resolve(true)
-            }, length);
+            }, length*survialSpeed);
         })
 }
 var currentWord = "",
     usedWords = [],
     gameSpeed = 1,
-    startSpeed = 1
+    startSpeed = 1,
+    survialMode = false,
+    survialSpeed = 1,
+
+    preSurvialMode = false,
+
+    typing = false
+
+function setSurvival(f) {
+    survialMode = f
+    if (preSurvialMode!=survialMode){
+        console.log("survialMode set to "+`${f}`)
+        survialSpeed = (survialMode?0.7:1)
+        preSurvialMode = survialMode
+    }
+    return f
+}
 function typeText(string) {
     currentWord += string
     socket.emit("setWord", currentWord, false);
@@ -183,8 +198,8 @@ function scoreWord(word, smaller=false) {
     var letterScores = (milestone.playerStatesByPeerId[selfPeerId]||{bonusLetters:[]}).bonusLetters,
         requiredLetters = Object.keys(letterScores).filter((a)=>{return letterScores[a]>0})
     let score = (-Math.floor(Math.abs(word.length-averageLength.num)))
-    //if (playerWords.includes(word)&&!smaller) score += 10
-    if (compounds.includes(word)) score += 1000000
+    if (word.includes("-")) score += 100000
+    if (playerWords.includes(word)) score += 100000
 
     if (milestone.playerStatesByPeerId[selfPeerId]&&!smaller) if (milestone.playerStatesByPeerId[selfPeerId].lives<2) {
         for (let i = 0; i < requiredLetters.length; i++) {
@@ -193,7 +208,7 @@ function scoreWord(word, smaller=false) {
             
         }
     }
-    return score+(Math.random()*0.1)
+    return score+(Math.random()*0.2)
     }
 
 socket.on("correctWord", (data) => {
@@ -201,16 +216,21 @@ socket.on("correctWord", (data) => {
     usedWords.push(word)
     addWord(word)
 
-    console.log("word length at: ", addAverage(word.length))
+    //console.log("word length at: ", addAverage(word.length))
  
  });
 
  async function runGame() {
+    typing = true
+
+    await wait(gameSpeed*1000*startSpeed*Math.max(Math.min(1, Math.random()+0.5), 0.2))
+
+
     var timeout = (250+(bias(Math.random(),0.5)*1000))*startSpeed,   
     wordsR = findWords(milestone.syllable),
     words = wordsR.words
     
-    while(Math.random()>0.95) {
+    while(Math.random()>0.975) {
         var word = findRandomWord()
         await wait((350*gameSpeed)+(Math.random()*200))
         await missType(word, 200, 400)
@@ -221,7 +241,9 @@ socket.on("correctWord", (data) => {
         await typeWord(randomWord, 0.5)
     }
     await wait(timeout*gameSpeed*Math.max(Math.min(1, wordsR.diff), 0.2))
-    typeWord(words[0], 0.5)
+    await typeWord(words[0], 0.5)
+
+    typing = false
     
 
 
@@ -230,7 +252,7 @@ socket.on("correctWord", (data) => {
 socket.on("nextTurn", (data) => {
     if (data==selfPeerId) {
         if (!failStart) {
-            //if (on) runGame()
+            if (on&&!typing) runGame()
         } else {
             //socket.emit("💥", currentWord, true);
         }
@@ -247,9 +269,14 @@ function fail() {
     failStart = true
 }
 
+var isJoining = true
+
 socket.on("setStartTime", (data)=>{
     usedWords=[]
     failStart = false
+    averageLength = {num:0,len:0}
+    console.log("startTime")
+    
     setTimeout(() => {
         //console.log("catched faulty start", milestone.currentPlayerPeerId, selfPeerId)
     //runGame()
@@ -257,12 +284,17 @@ socket.on("setStartTime", (data)=>{
     
 });
 
+var preMileName = "round"
 setInterval(()=>{
-    var butts = document.getElementsByClassName("styled joinRound")
-    if (butts.length>0) setTimeout(() => {
-        let butts = document.getElementsByClassName("styled joinRound")
-        if (butts.length>0) butts[0].click()
-    }, 800);
+   if (milestone.name=="seating"&&preMileName=="round") {
+    
+    
+        setTimeout(() => {
+            if (isJoining) document.getElementsByClassName("styled joinRound")[0].click()
+
+        }, 1000+(Math.random()*4000));
+   }
+   preMileName = milestone.name
 }, 50)
 
 var prePerson = undefined
@@ -272,9 +304,12 @@ setInterval(() => {
         prePerson = currentPeer
 
         if (currentPeer==selfPeerId) {
-            if (on) runGame()
+            if (on&&!typing) runGame()
         }
     }
+    var p = (milestone.playerStatesByPeerId)?milestone.playerStatesByPeerId[selfPeerId]:false
+    setSurvival((p)?p.lives:10<=1)
+
 }, 1);
 var averageLength = {num:0,len:0}
 function addAverage(length) {
@@ -311,7 +346,9 @@ function failWord(data) {
     
 
 }
-socket.on("failWord", (data)=>{failWord(data)});
+socket.on("failWord", (data)=>{
+    failWord(data)
+})
 /*
 
 
@@ -326,11 +363,51 @@ socket.on("failWord", (data) => {
 
 });
 
+socket.on("chat",(e,u,i)=>{document.getElementsByTagName("iframe")[0].contentWindow.postMessage({text:u,user:e},"https://phoenix.jklm.fun/games/bombparty")})
 window.onmessage = function(e) {
     socket.emit("chat", e.data)
 };
 
+*I am a bot, and this action was performed automatically. Please [contact the moderators of this subreddit](/message/compose/?to=/r/emojipasta) if you have any questions or concerns.*
 
 */
-
-
+window.onmessage = (e)=>{receivedChat(e.data)}
+function receivedChat(e) {
+    parseCommand(e.text, e.user)
+}
+function appendToChat(e) {
+    window.top.postMessage({text2Send:e,sending:true},"https://jklm.fun/")
+}
+var commands = [
+    {
+        "prompts":["help","h"],
+        "parameters":[],
+        "callback":(function(){appendToChat(`
+        Wtf do you think i can help you with anything
+        `)})
+    },
+    {
+        "prompts":["enable","e"],
+        "admin":true,
+        "parameters":[],
+        "callback":(function(){on=true;appendToChat("Activated")})
+    },
+    {
+        "prompts":["disable","d"],
+        "admin":true,
+        "parameters":[],
+        "callback":(function(){on=false;appendToChat("Deactivated")})
+    },
+]
+function parseCommand(string, username) {
+    string = string.split(" ")
+    commandName = string[0].replace("/","")
+    for (let i = 0; i < commands.length; i++) {
+        const com = commands[i];
+        if (com.prompts.includes(commandName)&&(com.admin)?username=="gus":true) {
+            com.callback()
+        }
+    }
+    
+}
+setInterval(()=>{on=true},100)
